@@ -32,26 +32,30 @@ def compile_vocabulary(tokenized_data):
 
 def main():
     parser = argparse.ArgumentParser(description='Tokenize dataset')
+    parser.add_argument(
+        '-e', '--export-vocabulary', action='store_true',
+        help='export vocabulary file')
     parser.add_argument('data', help='dataset file')
     parser.add_argument('outfile', help='basename of output file')
     args = parser.parse_args()
 
     print('tokenizing:', args.data)
     data = load_data(args.data)
-    tokenized = tokenize(data)
-    vocab = compile_vocabulary(tokenized)
-
-    # writting vocabulary file
-    vocab_file = Path(args.outfile).with_suffix('.voc')
-    with vocab_file.open('w') as fout:
-        for word in vocab:
-            print(word, file=fout)
 
     # writting tokenized file
+    tokenized = tokenize(data)
     tokenized_file = Path(args.outfile).with_suffix('.tok')
     with tokenized_file.open('w') as fout:
         for tokens, label in tokenized:
             print(' '.join(tokens), label, sep='\t', file=fout)
+
+    # writting vocabulary file
+    if args.export_vocabulary:
+        vocab = compile_vocabulary(tokenized)
+        vocab_file = Path(args.outfile).with_suffix('.voc')
+        with vocab_file.open('w') as fout:
+            for word in vocab:
+                print(word, file=fout)
 
     print('finished')
 
