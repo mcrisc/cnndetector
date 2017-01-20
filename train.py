@@ -94,10 +94,6 @@ def main():
             if step % CHECKPOINT_EVERY == 0:
                 saver.save(sess, model_path, global_step=step)
 
-            # FIXME remove if below
-            if step > 50:
-                break
-
 
 if __name__ == '__main__':
     main()
