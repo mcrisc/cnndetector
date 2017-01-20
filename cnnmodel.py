@@ -6,9 +6,21 @@ import tensorflow as tf
 
 
 class TextCNN:
+    """Define the CNN model.
+
+    This model implements the pattern inference/train/loss.
+
+    Attributes
+        predictions: computes the predictions
+        loss: computes the loss
+        train_op: executes the optimization
+        accuracy: computes the accuracy in current batch
+        summary: return summaries to be visualized in TensorBoard
+    """
+
     def __init__(self, sequence_length, num_classes, vocab_size,
                  embedding_size, filter_sizes, num_filters):
-        """Define computation graph operations.
+        """Build the computation graph.
         """
         # input placeholders
         self.keep_prob = tf.placeholder(tf.float32, name='keep_prob')
@@ -39,46 +51,36 @@ class TextCNN:
         # output layer (fc-layer)
         with tf.name_scope('fc-layer'):
             self._scores = _fullyconnected_layer(features_drop, num_classes)
-            self._predictions = tf.argmax(self._scores, 1)
+            self.predictions = tf.argmax(self._scores, 1)
 
         # loss
         with tf.name_scope('loss'):
             # cross entropy
             losses = tf.nn.softmax_cross_entropy_with_logits(
                 self._scores, self.input_y)
-            self._loss = tf.reduce_mean(losses)
+            self.loss = tf.reduce_mean(losses)
+            tf.summary.scalar('loss', self.loss)
 
         # training
         with tf.name_scope('optimize'):
-            tf.summary.scalar('loss', self._loss)
             # optimizer
             optimizer = tf.train.AdamOptimizer()
             global_step = tf.Variable(0, name='global_step', trainable=False)
-            self._train_op = optimizer.minimize(
-                self._loss, global_step=global_step)
+            self.train_op = optimizer.minimize(
+                self.loss, global_step=global_step)
 
         # accuracy
         with tf.name_scope('accuracy'):
             # cross entropy
             correct_predictions = tf.equal(
-                self._predictions,
+                self.predictions,
                 tf.argmax(self.input_y, 1))
             self.accuracy = tf.reduce_mean(
                 tf.cast(correct_predictions, tf.float32))
+            tf.summary.scalar('accuracy', self.accuracy)
 
-    # Defining properties to make explict the
-    # adherence to inference/train/loss pattern
-    @property
-    def inference(self):
-        return self._predictions
-
-    @property
-    def loss(self):
-        return self._loss
-
-    @property
-    def train(self):
-        return self._train_op
+        # merging summaries
+        self.summary = tf.summary.merge_all()
 
 
 def _conv_filter(filter_size, num_filters, embedding_size, in_channels):
@@ -155,7 +157,7 @@ if __name__ == '__main__':
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         predictions, loss, accuracy = sess.run(
-            [cnn.inference, cnn.loss, cnn.accuracy],
+            [cnn.predictions, cnn.loss, cnn.accuracy],
             feed_dict=feed_dict)
     print('Test results')
     print('predictions:', predictions)
