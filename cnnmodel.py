@@ -15,7 +15,7 @@ class TextCNN:
         loss: computes the loss
         train_op: executes the optimization
         accuracy: computes the accuracy in current batch
-        summary: return summaries to be visualized in TensorBoard
+        summaries: return summaries to be visualized in TensorBoard
     """
 
     def __init__(self, sequence_length, num_classes, vocab_size,
@@ -80,7 +80,7 @@ class TextCNN:
             tf.summary.scalar('accuracy', self.accuracy)
 
         # merging summaries
-        self.summary = tf.summary.merge_all()
+        self.summaries = tf.summary.merge_all()
 
 
 def _conv_filter(filter_size, num_filters, embedding_size, in_channels):
