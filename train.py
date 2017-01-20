@@ -12,6 +12,7 @@ import dataio
 BATCH_SIZE = 50
 NUM_EPOCHS = 3
 KEEP_PROB = 0.8
+CHECKPOINT_EVERY = 10
 
 # model parameters
 EMBEDDING_SIZE = 100
@@ -30,13 +31,11 @@ def main():
 
     # preparing output directories
     outdir = Path(args.outdir)
-    if not outdir.exists():
-        outdir.mkdir(parents=True)
-    model_dir = Path(outdir, 'models')
-    log_dir = Path(outdir, 'logs')
-    for directory in (model_dir, log_dir):
-        if not directory.exists():
-            directory.mkdir()
+    utc_time = time.strftime('%Y%m%dT%H%M%S', time.gmtime())
+    log_dir = Path(outdir, 'run-%s' % utc_time)
+    if not log_dir.exists():
+        log_dir.mkdir(parents=True)
+    model_path = Path(log_dir, 'model.ckpt').as_posix()
 
     # loading data
     print('loading data...')
@@ -92,6 +91,10 @@ def main():
                 print('Step %d, loss: %.4f, batch accuracy: %.4f' %
                       (step, loss, accuracy))
 
+            if step % CHECKPOINT_EVERY == 0:
+                saver.save(sess, model_path, global_step=step)
+
+            # FIXME remove if below
             if step > 50:
                 break
 
