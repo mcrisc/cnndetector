@@ -4,7 +4,7 @@ import argparse
 
 import dataio
 
-SENTENCE_SIZE = 50
+SENTENCE_SIZE = 80
 
 
 def main():
