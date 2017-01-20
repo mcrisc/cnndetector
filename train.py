@@ -2,6 +2,7 @@
 """
 import argparse
 import time
+from pathlib import Path
 
 import tensorflow as tf
 import cnnmodel
@@ -27,6 +28,16 @@ def main():
         'outdir', help='output directory to save models and logs')
     args = parser.parse_args()
 
+    # preparing output directories
+    outdir = Path(args.outdir)
+    if not outdir.exists():
+        outdir.mkdir(parents=True)
+    model_dir = Path(outdir, 'models')
+    log_dir = Path(outdir, 'logs')
+    for directory in (model_dir, log_dir):
+        if not directory.exists():
+            directory.mkdir()
+
     # loading data
     print('loading data...')
     start_time = time.time()
@@ -41,6 +52,7 @@ def main():
     num_classes = len(train_data.classes)
     # releasing resources
     del vocab_index
+    print('vocabulary size:', vocab_size)
 
     # building the graph
     print('building graph')
@@ -49,10 +61,16 @@ def main():
                            EMBEDDING_SIZE, FILTER_SIZES, NUM_FILTERS)
     print('graph ready [%.3f sec]' % (time.time() - start_time))
 
+    # savers
+    saver = tf.train.Saver()
+    train_writer = tf.summary.FileWriter(log_dir.as_posix())
+
     # training
     print('starting training')
     with tf.Session() as sess:
+        train_writer.add_graph(sess.graph)
         sess.run(tf.global_variables_initializer())
+
         step = 0
         for batch in dataio.batch_iter(
                 train_data, BATCH_SIZE, NUM_EPOCHS, shuffle=True):
@@ -64,9 +82,11 @@ def main():
                 cnn.input_y: labels
             }
 
+            # running operations
             _, loss, accuracy, summaries = sess.run(
                 [cnn.train_op, cnn.loss, cnn.accuracy, cnn.summaries],
                 feed_dict=feed_dict)
+            train_writer.add_summary(summaries, step)
 
             if step % 10 == 0:
                 print('Step %d, loss: %.4f, batch accuracy: %.4f' %
@@ -75,7 +95,6 @@ def main():
             if step > 50:
                 break
 
-    # TODO save output to outdir/{model,log}
 
 if __name__ == '__main__':
     main()
