@@ -2,13 +2,9 @@
 """
 import argparse
 
+import dataio
+
 SENTENCE_SIZE = 50
-
-
-def build_vocab_index(fpath):
-    with open(fpath) as fin:
-        index = {line.strip(): i for i, line in enumerate(fin)}
-    return index
 
 
 def main():
@@ -20,7 +16,7 @@ def main():
     args = parser.parse_args()
 
     # building vocabulary
-    vocab_index = build_vocab_index(args.vocabulary)
+    vocab_index = dataio.build_vocab_index(args.vocabulary)
     pad = vocab_index['<PAD>']
 
     # mapping words to indices
