@@ -70,9 +70,8 @@ def main():
     print('saving predictions')
     outfile = 'results_' + Path(args.data).name
     classes = params['classes']
-    predicted_labels = list(map(classes.__getitem__, predictions))
-    groundtruth_labels = list(map(classes.__getitem__,
-                              map(np.argmax, data.labels)))
+    predicted_labels = map(classes.__getitem__, predictions)
+    groundtruth_labels = map(classes.__getitem__, map(np.argmax, data.labels))
     with open(outfile, 'w') as fout:
         lineno = 0
         for predicted, label in zip(predicted_labels, groundtruth_labels):
