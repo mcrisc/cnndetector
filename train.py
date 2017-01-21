@@ -42,7 +42,7 @@ def main():
     start_time = time.time()
     vocab_index = dataio.build_vocab_index(args.vocabulary)
     train_data = dataio.load_data(args.train)
-    # dev_data = dataio.load_data(args.dev)
+    dev_data = dataio.load_data(args.dev)
     print('data loaded [%.3f sec]' % (time.time() - start_time))
 
     # parameter inference
@@ -62,12 +62,21 @@ def main():
 
     # savers
     saver = tf.train.Saver()
-    train_writer = tf.summary.FileWriter(log_dir.as_posix())
+    train_writer = tf.summary.FileWriter((log_dir / 'train').as_posix())
+    test_writer = tf.summary.FileWriter((log_dir / 'test').as_posix())
+
+    # test feed
+    dev_feed = {
+        cnn.keep_prob: 1.0,
+        cnn.input_x: dev_data.sequences,
+        cnn.input_y: dev_data.labels
+    }
 
     # training
     print('starting training')
     with tf.Session() as sess:
         train_writer.add_graph(sess.graph)
+        test_writer.add_graph(sess.graph)
         sess.run(tf.global_variables_initializer())
 
         step = 0
@@ -75,7 +84,7 @@ def main():
                 train_data, BATCH_SIZE, NUM_EPOCHS, shuffle=True):
             step += 1
             sentences, labels = batch
-            feed_dict = {
+            train_feed = {
                 cnn.keep_prob: KEEP_PROB,
                 cnn.input_x: sentences,
                 cnn.input_y: labels
@@ -84,7 +93,7 @@ def main():
             # running operations
             _, loss, accuracy, summaries = sess.run(
                 [cnn.train_op, cnn.loss, cnn.accuracy, cnn.summaries],
-                feed_dict=feed_dict)
+                feed_dict=train_feed)
             train_writer.add_summary(summaries, step)
 
             if step % 10 == 0:
@@ -93,6 +102,14 @@ def main():
 
             if step % CHECKPOINT_EVERY == 0:
                 saver.save(sess, model_path, global_step=step)
+                accuracy, summaries = sess.run(
+                    [cnn.accuracy, cnn.summaries],
+                    feed_dict=dev_feed)
+                test_writer.add_summary(summaries, step)
+                print('Step %d, DEV accuracy: %.4f' % (step, accuracy))
+
+        # saving last models
+        saver.save(sess, model_path, global_step=step)
 
 
 if __name__ == '__main__':
