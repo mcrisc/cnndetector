@@ -15,6 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description='Detect language variants.')
     parser.add_argument('modeldir', help='directory of trained model')
     parser.add_argument('data', help='data to classify')
+    parser.add_argument('outfile', help='output file')
     args = parser.parse_args()
 
     # preparing output directories
@@ -68,16 +69,15 @@ def main():
 
     # saving output file
     print('saving predictions')
-    outfile = 'results_' + Path(args.data).name
     classes = params['classes']
     predicted_labels = map(classes.__getitem__, predictions)
     groundtruth_labels = map(classes.__getitem__, map(np.argmax, data.labels))
-    with open(outfile, 'w') as fout:
+    with open(args.outfile, 'w') as fout:
         lineno = 0
         for predicted, label in zip(predicted_labels, groundtruth_labels):
             lineno += 1
             print(lineno, predicted, label, sep='\t', file=fout)
-    print('predictions saved to:', outfile)
+    print('predictions saved to:', args.outfile)
     print('accuracy: %.4f' % accuracy)
 
 
