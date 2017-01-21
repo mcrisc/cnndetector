@@ -1,6 +1,7 @@
 """Train CNN classifier.
 """
 import argparse
+import json
 import time
 from pathlib import Path
 
@@ -52,6 +53,20 @@ def main():
     # releasing resources
     del vocab_index
     print('vocabulary size:', vocab_size)
+
+    # saving model parameters
+    print('saving model parameters')
+    parameters = {
+        'sequence_length': sequence_length,
+        'classes': train_data.classes,
+        'vocab_size': vocab_size,
+        'embedding_size': EMBEDDING_SIZE,
+        'filter_sizes': FILTER_SIZES,
+        'num_filters': NUM_FILTERS
+    }
+    parameter_file = log_dir / 'model-parameters.json'
+    with parameter_file.open('w') as fout:
+        json.dump(parameters, fout)
 
     # building the graph
     print('building graph')
