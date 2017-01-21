@@ -5,6 +5,7 @@ import json
 import time
 from pathlib import Path
 
+import numpy as np
 import tensorflow as tf
 import cnnmodel
 import dataio
@@ -65,7 +66,19 @@ def main():
         elapsed = time.time() - start_time
         print('classification finished [%.3f sec]' % elapsed)
 
-    print('predictions:', predictions)
+    # saving output file
+    print('saving predictions')
+    outfile = 'results_' + Path(args.data).name
+    classes = params['classes']
+    predicted_labels = list(map(classes.__getitem__, predictions))
+    groundtruth_labels = list(map(classes.__getitem__,
+                              map(np.argmax, data.labels)))
+    with open(outfile, 'w') as fout:
+        lineno = 0
+        for predicted, label in zip(predicted_labels, groundtruth_labels):
+            lineno += 1
+            print(lineno, predicted, label, sep='\t', file=fout)
+    print('predictions saved to:', outfile)
     print('accuracy: %.4f' % accuracy)
 
 
